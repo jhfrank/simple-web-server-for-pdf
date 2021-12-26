@@ -3,22 +3,15 @@
 
 <head>
   <meta charset="utf-8">
-  <title>A Simple Web Page</title>
+  <title>Loading files from Server</title>
 </head>
 
 <body>
-  <h1>Greeting the user</h1>
-
-  <p>Your name:</p>
-  <input type="text" id="user-name" size="60" />
-  <button type="button" id="greet-user">SET</button>
-  <p id="greeting"></p>
-
-  <div id="message-section" style="visibility: hidden">
-    <p>Your message:</p>
-    <input type="text" id="the-message" size="60" />
-    <button type="button" id="send-message">SEND</button>
-    <p id="message-history"></p>
+  <h1>Select file from list</h1>
+  <ul id='file-list', style='list-style-type: none'></ul>
+  
+  <div id="display-section">
+    <h2>Selected file:</h2>
   </div>
 
   <script src="../client/index.js"></script>

@@ -1,15 +1,18 @@
 // library imports
-import {readFileSync} from 'fs';
+import fs from 'fs';
 
 // my imports
 import * as logger from './logging.mjs';
+
+// constants
+const filesDir = './server/files';
 
 // serve file with given mime type
 const serveFile = (filePath, mimeType) => {
     return ((req, res) => {
         res.setHeader('Content-Type', mimeType);
         res.writeHead(200);
-        res.end(readFileSync(filePath));
+        res.end(fs.readFileSync(filePath));
     });
 }
 
@@ -19,45 +22,32 @@ const indexJs = serveFile('./client/index.js', 'text/javascript');
 
 export {homePage, favIcon, indexJs};
 
-// process incoming message (in POST body)
-export function newMessage(req, res) {
-    let data = [];
-    // large data may come in more than one 'chunk' of bytes; need to combine those
-    req.on('data', function(chunk) {
-        data.push(chunk);
-    });
-    // the last chunk has arrived with this req, we can process the data now
-    req.on('end', function() {
-        logger.info(`received message data ${data}`);
-        const dataObj = JSON.parse(data); // convert string back to object { user: '...', message: '...' }
-        addMessage(dataObj); // add message to the message history 
-        res.setHeader('Content-Length', '0');
-        res.writeHead(200); // tell the browser that the message was received
-        res.end(); 
+// get list of files for selection
+export function getFilesForSelection(req, res, searchParams) {
+    fs.readdir(filesDir, (err, files) => {
+        let resultStr;
+        if (err) {
+            logger.error(`error listing files in directory '${filesDir}': `, err)
+            resultStr = JSON.stringify({"errorMsg": err.msg});
+        } else {
+            let filesFound = [];
+            files.forEach(fileName => {
+                // if (fileName.endsWith('.pdf')) {
+                    filesFound.push(fileName);
+                // }
+            });
+            logger.info(`found ${filesFound.length} files: `, filesFound)
+            resultStr = JSON.stringify({"files": filesFound});
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(resultStr);
     });
 }
 
-// the message histories of all users
-const userMessages = {};
-
-function addMessage(dataObj) {
-    const usr = dataObj.user;
-    const msg = dataObj.message;
-    if (!(usr in userMessages)) {
-        userMessages[usr] = []; // initialize array of messages for new user
-    }
-    userMessages[usr].push(logger.utcTimeForLogging() + ' ' + msg); // add the new message for this user
-    logger.debug('all messages from all users\n', userMessages);
-}
-
-export function getMessagesForUser(req, res, searchParams) {
-    const usr = searchParams.get('usr');
-    logger.info(`retrieving messages for user '${usr}'`);
-    const result = {
-        'messages': userMessages[usr] // only return the messages of the user requested
-    }
-    const resultStr = JSON.stringify(result)
-    res.setHeader('Content-Type', 'application/json');
+export function fetchFile(req, res, searchParams) {
+    logger.info(`received /fetch-file with parameters: `, searchParams);
+    res.setHeader('ContentType', 'application/text');
     res.writeHead(200);
-    res.end(resultStr);
+    res.end('Hello world!');
 }

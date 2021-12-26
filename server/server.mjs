@@ -7,27 +7,27 @@ import {
     homePage,
     favIcon,
     indexJs,
-    newMessage,
-    getMessagesForUser,
+    getFilesForSelection,
+    fetchFile,
 } from './handler.mjs';
 
 // constants
-const myPort = 3434
+const myPort = 3435
 
 // dispatcher, mapping http VERB and /path to name of function (defined in handler.mjs) which returns a file
 const dispatch = {
     'GET /': homePage,
     'GET /favicon.ico': favIcon,
     'GET /client/index.js': indexJs,
-    'POST /new-message': newMessage,
-    'GET /messages-for-user': getMessagesForUser,
+    'GET /files-for-selection': getFilesForSelection,
+    'GET /fetch-file': fetchFile,
 }
 
 const myServer = createServer((req, res) => {
     const reqURL = new URL('http://' + req.headers.host + req.url);
     const rq = req.method + ' ' + reqURL.pathname;
     console.log('');
-    logger.info('received', rq);
+    logger.info('received', rq, reqURL.searchParams != null ? reqURL.searchParams : '');
     if (rq in dispatch) {
         dispatch[rq](req, res, reqURL.searchParams);
     } else {
