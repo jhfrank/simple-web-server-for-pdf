@@ -14,7 +14,7 @@ import {
 // constants
 const myPort = 3435
 
-// dispatcher, mapping http VERB and /path to name of function (defined in handler.mjs) which returns a file
+// dispatcher, mapping http VERB and /path to name of function (defined in handler.mjs) 
 const dispatch = {
     'GET /': homePage,
     'GET /favicon.ico': favIcon,

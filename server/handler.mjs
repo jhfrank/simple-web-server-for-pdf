@@ -5,7 +5,7 @@ import fs from 'fs';
 import * as logger from './logging.mjs';
 
 // constants
-const filesDir = './server/files';
+const filesDir = './server/files/';
 
 // serve file with given mime type
 const serveFile = (filePath, mimeType) => {
@@ -25,16 +25,14 @@ export {homePage, favIcon, indexJs};
 // get list of files for selection
 export function getFilesForSelection(req, res, searchParams) {
     fs.readdir(filesDir, (err, files) => {
-        let resultStr;
+        const resultStr;
         if (err) {
             logger.error(`error listing files in directory '${filesDir}': `, err)
             resultStr = JSON.stringify({"errorMsg": err.msg});
         } else {
-            let filesFound = [];
+            const filesFound = [];
             files.forEach(fileName => {
-                // if (fileName.endsWith('.pdf')) {
-                    filesFound.push(fileName);
-                // }
+                filesFound.push(fileName);
             });
             logger.info(`found ${filesFound.length} files: `, filesFound)
             resultStr = JSON.stringify({"files": filesFound});
@@ -45,9 +43,34 @@ export function getFilesForSelection(req, res, searchParams) {
     });
 }
 
+const mimeTypes = {
+    'pdf': 'application/pdf',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'txt': 'text/plain',
+};
+
 export function fetchFile(req, res, searchParams) {
     logger.info(`received /fetch-file with parameters: `, searchParams);
-    res.setHeader('ContentType', 'application/text');
-    res.writeHead(200);
-    res.end('Hello world!');
+    if (searchParams.has('file')) {
+        const fileName = searchParams.get('file');
+        const filePath = filesDir + fileName;
+        const suffix = /.*\.([a-zA-Z]+)$/.exec(fileName)[1]; // TODO: this will fail if filename does not have a dot-separated suffix
+        if (suffix in mimeTypes) {
+            const fileContent = fs.readFileSync(filePath); // file content original byte stream
+            const fileContentBase64 = fileContent.toString('base64'); // file content base64 encoded for transmission
+            const mimeType = mimeTypes[suffix]; // mime type, derived from file extension
+            logger.info(`will try to send file '${filePath}' with mime type '${mimeType}'`);
+            res.setHeader('Content-Type', mimeType);
+            res.writeHead(200);
+            res.end(fileContentBase64); // send base64 encoded file content
+        } else {
+            res.writeHead(500);
+            res.end(`file '${fileName}' has unknown mime type`);
+        }
+    } else {
+        res.writeHead(500);
+        res.end(`no 'file' property found in URL parameters`);
+    }
 }
