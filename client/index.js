@@ -84,7 +84,7 @@ function displayResult(responseBase64, contentType) {
 }
 
 // see https://stackoverflow.com/questions/58488416/open-base64-encoded-pdf-file-using-javascript-issue-with-file-size-larger-than
-function base64ToBlob(contentBase64, contentType = "application/octet-stream") {
+function base64ToBlob(contentBase64, contentType) {
     const contentBinary = atob(contentBase64); // convert base64 character strea to original byte stream
     const len = contentBinary.length;
     const arr = new Uint8Array(len);
